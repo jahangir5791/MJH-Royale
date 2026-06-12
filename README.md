@@ -1,3 +1,3 @@
-# mjh-pubg-royale
+# mjh-royale
 
 A PWA/game project with frontend, backend, shared packages, database, docs, and deployment setup.

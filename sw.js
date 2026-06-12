@@ -1,77 +1,77 @@
 const CACHE_NAME = 'mjh-pubg-royale-v1';
 
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/offline.html',
-  '/icons/icon-192.png',
-  '/icons/icon-256.png'
+ '/',
+ '/index.html',
+ '/manifest.json',
+ '/offline.html',
+ '/icons/icon-192.png',
+ '/icons/icon-256.png'
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
-  );
-  self.skipWaiting();
+ event.waitUntil(
+  caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+ );
+ self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) =>
-      Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
-          return undefined;
-        })
-      )
-    )
-  );
-  self.clients.claim();
+ event.waitUntil(
+  caches.keys().then((cacheNames) =>
+   Promise.all(
+    cacheNames.map((cacheName) => {
+     if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
+     return undefined;
+    })
+   )
+  )
+ );
+ self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+ if (event.request.method !== 'GET') return;
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
+ event.respondWith(
+  caches.match(event.request).then((cachedResponse) => {
+   if (cachedResponse) return cachedResponse;
 
-      return fetch(event.request)
-        .then((networkResponse) => {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-          return networkResponse;
-        })
-        .catch(() => {
-          if (event.request.destination === 'document') {
-            return caches.match('/offline.html');
-          }
-          return new Response('', { status: 503, statusText: 'Offline' });
-        });
+   return fetch(event.request)
+    .then((networkResponse) => {
+     const responseClone = networkResponse.clone();
+     caches.open(CACHE_NAME).then((cache) => {
+      cache.put(event.request, responseClone);
+     });
+     return networkResponse;
     })
-  );
+    .catch(() => {
+     if (event.request.destination === 'document') {
+      return caches.match('/offline.html');
+     }
+     return new Response('', { status: 503, statusText: 'Offline' });
+    });
+  })
+ );
 });
 
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-game-data') {
-    // Future sync logic
-  }
+ if (event.tag === 'sync-game-data') {
+  // Future sync logic
+ }
 });
 
 self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.text() : 'New game notification!';
-  const options = {
-    body: data,
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
-    vibrate: [100, 50, 100],
-    data: { date: new Date().toISOString() }
-  };
+ const data = event.data ? event.data.text() : 'New game notification!';
+ const options = {
+  body: data,
+  icon: '/icons/icon-192.png',
+  badge: '/icons/icon-192.png',
+  vibrate: [100, 50, 100],
+  data: { date: new Date().toISOString() }
+ };
 
-  event.waitUntil(
-    self.registration.showNotification('MJH PUBG Royale', options)
-  );
+ event.waitUntil(
+  self.registration.showNotification('MJH Royale', options)
+ );
 });

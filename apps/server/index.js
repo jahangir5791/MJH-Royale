@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: '*' }
+ cors: { origin: '*' }
 });
 
 const rooms = new Map();
@@ -19,87 +19,87 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', '..')));
 
 function makePlayer(id) {
-  return {
-    id,
-    x: 0,
-    y: 1,
-    z: 0,
-    rotY: 0,
-    hp: 100,
-    ammo: 30
-  };
+ return {
+  id,
+  x: 0,
+  y: 1,
+  z: 0,
+  rotY: 0,
+  hp: 100,
+  ammo: 30
+ };
 }
 
 app.get('/health', (_, res) => {
-  res.json({ ok: true });
+ res.json({ ok: true });
 });
 
 app.post('/api/room', (_, res) => {
-  const roomCode = Math.random().toString(36).slice(2, 8).toUpperCase();
-  if (!rooms.has(roomCode)) rooms.set(roomCode, new Map());
-  res.json({ ok: true, roomCode });
+ const roomCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+ if (!rooms.has(roomCode)) rooms.set(roomCode, new Map());
+ res.json({ ok: true, roomCode });
 });
 
 app.post('/api/room/:roomCode', (req, res) => {
-  const roomCode = String(req.params.roomCode || '').toUpperCase();
-  if (!rooms.has(roomCode)) rooms.set(roomCode, new Map());
-  res.json({ ok: true, roomCode });
+ const roomCode = String(req.params.roomCode || '').toUpperCase();
+ if (!rooms.has(roomCode)) rooms.set(roomCode, new Map());
+ res.json({ ok: true, roomCode });
 });
 
 app.post('/api/match/start', (_, res) => {
-  res.json({ ok: true, matchId: `M-${Date.now()}` });
+ res.json({ ok: true, matchId: `M-${Date.now()}` });
 });
 
 io.on('connection', (socket) => {
-  socket.on('joinRoom', ({ roomId }) => {
-    const room = roomId || 'lobby';
-    socket.join(room);
+ socket.on('joinRoom', ({ roomId }) => {
+  const room = roomId || 'lobby';
+  socket.join(room);
 
-    if (!rooms.has(room)) {
-      rooms.set(room, new Map());
-    }
+  if (!rooms.has(room)) {
+   rooms.set(room, new Map());
+  }
 
-    const players = rooms.get(room);
-    players.set(socket.id, makePlayer(socket.id));
+  const players = rooms.get(room);
+  players.set(socket.id, makePlayer(socket.id));
 
-    socket.data.roomId = room;
+  socket.data.roomId = room;
 
-    socket.emit('roomJoined', {
-      roomId: room,
-      players: Array.from(players.values())
-    });
-
-    socket.to(room).emit('playerJoined', makePlayer(socket.id));
+  socket.emit('roomJoined', {
+   roomId: room,
+   players: Array.from(players.values())
   });
 
-  socket.on('playerInput', (input) => {
-    const room = socket.data.roomId;
-    if (!room || !rooms.has(room)) return;
+  socket.to(room).emit('playerJoined', makePlayer(socket.id));
+ });
 
-    const players = rooms.get(room);
-    const p = players.get(socket.id);
-    if (!p) return;
+ socket.on('playerInput', (input) => {
+  const room = socket.data.roomId;
+  if (!room || !rooms.has(room)) return;
 
-    const speed = 0.12;
-    if (input.forward) p.z -= speed;
-    if (input.backward) p.z += speed;
-    if (input.left) p.x -= speed;
-    if (input.right) p.x += speed;
-    p.rotY = input.rotY ?? p.rotY;
+  const players = rooms.get(room);
+  const p = players.get(socket.id);
+  if (!p) return;
 
-    socket.to(room).emit('playerState', p);
-  });
+  const speed = 0.12;
+  if (input.forward) p.z -= speed;
+  if (input.backward) p.z += speed;
+  if (input.left) p.x -= speed;
+  if (input.right) p.x += speed;
+  p.rotY = input.rotY ?? p.rotY;
 
-  socket.on('disconnect', () => {
-    const room = socket.data.roomId;
-    if (!room || !rooms.has(room)) return;
+  socket.to(room).emit('playerState', p);
+ });
 
-    const players = rooms.get(room);
-    players.delete(socket.id);
-    socket.to(room).emit('playerLeft', { id: socket.id });
-  });
+ socket.on('disconnect', () => {
+  const room = socket.data.roomId;
+  if (!room || !rooms.has(room)) return;
+
+  const players = rooms.get(room);
+  players.delete(socket.id);
+  socket.to(room).emit('playerLeft', { id: socket.id });
+ });
 });
 
 server.listen(3000, () => {
-  console.log('Server running on http://localhost:3000');
+ console.log('Server running on http://localhost:3000');
 });

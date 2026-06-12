@@ -6,15 +6,15 @@ const socket = io('http://localhost:3000');
 initInput(canvas);
 
 socket.on('connect', () => {
-  socket.emit(EVENTS.JOIN_ROOM, { roomId: DEFAULT_ROOM });
+ socket.emit(EVENTS.JOIN_ROOM, { roomId: DEFAULT_ROOM });
 });
 
 setInterval(() => {
-  socket.emit(EVENTS.PLAYER_INPUT, {
-    forward: inputState.forward,
-    backward: inputState.backward,
-    left: inputState.left,
-    right: inputState.right,
-    rotY: player.rotation.y,
-  });
+ socket.emit(EVENTS.PLAYER_INPUT, {
+  forward: inputState.forward,
+  backward: inputState.backward,
+  left: inputState.left,
+  right: inputState.right,
+  rotY: player.rotation.y,
+ });
 }, 50);
